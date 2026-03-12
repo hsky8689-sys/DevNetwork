@@ -33,6 +33,14 @@ ROOT_URLCONF='devnetwork.urls'
 
 # Application definition
 
+DEFAULT_SECTIONS = {
+    'About me': config('ABOUT_ME_DEFAULT'),
+    'Skills': config('SKILLS_DEFAULT'),
+    'Education': config('EDUCATION_DEFAULT'),
+    'Experience': config('EXPERIENCE_DEFAULT'),
+    'Certifications': config('CERTIFICATIONS_DEFAULT'),
+}
+
 INSTALLED_APPS = [
     'daphne',
     'django.contrib.admin',
@@ -42,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'chat',
-    'users'
+    'users',
+    'projects'
 ]
 
 MIDDLEWARE = [
@@ -98,6 +107,8 @@ DATABASES = {
 }
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR/'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -129,6 +140,21 @@ USE_I18N = True
 
 USE_TZ = True
 
+TEMPLATES = [
+    {
+        'BACKEND':'django.template.backends.django.DjangoTemplates',
+        'DIRS':[BASE_DIR/'templates'],
+        'APP_DIRS':True,
+        'OPTIONS':{
+            'context_processors': [
+                            'django.template.context_processors.debug',
+                            'django.template.context_processors.request',
+                            'django.contrib.auth.context_processors.auth',
+                            'django.contrib.messages.context_processors.messages',
+                                    ],
+        }
+    }
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

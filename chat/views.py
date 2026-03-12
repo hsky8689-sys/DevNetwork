@@ -4,16 +4,16 @@ from django.contrib.auth.forms import UserCreationForm
 
 # Create your views here.
 def index(request):
-    return render(request, "html/templates/templates/html/index.html")
+    return render(request, "html/index.html")
 def register_view(request):
     form = UserCreationForm()
     return render(request,
-                  "html/templates/html/signup.html",
+                  "html/signup.html",
                   {"form":form})
 def show_all_messages(request):
     messages = Message.objects.all()
-    return render(request, 'html/templates/html/messages.html', {'messages':messages})
+    return render(request, 'html/messages.html', {'messages':messages})
 def room(request,room_name):
-    return render(request, "html/templates/templates/html/room.html", {"room_name":room_name})
+    return render(request, "html/room.html", {"room_name":room_name})
 def signup(request):
-    return render(request, "html/templates/templates/html/signup.html")
+    return render(request, "html/signup.html")

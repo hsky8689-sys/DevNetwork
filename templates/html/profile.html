@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<link rel="stylesheet" href="{% static 'css/profile-page.css' %}">
+<html lang="en">
+<head>
+        <meta charset="utf-8"/>
+        <title>Profile page {{username}}</title>
+</head>
+<body>
+    <div class="buttons-bar">
+        <input type="button" value="Login">
+        <input type="button" value="Search">
+        <input type="button" value="Make new project">
+        <input type="button" value="Inbox">
+        <input type="button" value="Conversations">
+        <input type="button" value="Connections">
+        <input type="button" value="My profile">
+    </div>
+    <div class="profile-data">
+        <table>
+            <td>
+                profile pic
+            </td>
+            <td> 
+                background pic
+            </td>
+        </table>
+    </div>
+    <div>
+        <img src="" alt="">
+        <h2 style="justify-content: left;">{{username}}</h2>
+    
+    <table class="profile-data">
+        <td id="table-interests">
+            interests
+        </td>
+        <td id="table profile sections">
+            profile sections
+        </td>
+        <td id="community-projects">
+            community projects
+        </td>
+        </table>
+    </div>
+</body>
+</html>

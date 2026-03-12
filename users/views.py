@@ -1,10 +1,8 @@
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate,login
-from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import User
-
 
 # Create your views here.
 def signup_page(request):
@@ -39,9 +37,9 @@ def acces_profile(request,username):
     }
     return render(request, "html/profile.html", context)
 def login_page(request):
-    if request.user.is_authenticated:
-        return redirect('users:profile-path', username=request.user.username)
     if request.method == "POST":
+        if request.user.is_authenticated:
+            logout(request)
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(request,username=username,password=password)
@@ -52,4 +50,6 @@ def login_page(request):
             messages.error(request,'Date incorecte')
             return redirect('user_login')
     else:
+        if request.user.is_authenticated:
+            logout(request)
         return render(request, "html/login.html")
