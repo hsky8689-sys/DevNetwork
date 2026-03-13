@@ -2,7 +2,10 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import User
+
+from projects.models import Project
+from .models import User, UserProfileSection, UserTechnicalSkillSection
+
 
 # Create your views here.
 def signup_page(request):
@@ -30,10 +33,24 @@ def signup_page(request):
 @login_required
 def acces_profile(request,username):
     user = get_object_or_404(User,username=username)
+    profile_stats = {
+        "profile_sections":[],
+        "teckstack_category":{},
+        "profile_projects":[]
+    }
+    if request.user.username == username:
+        profile_stats["profile_sections"] = UserProfileSection.objects.get_user_profile_sections(request.user,includehidden=True)
+    else:
+        profile_stats["profile_sections"] = UserProfileSection.objects.get_user_profile_sections(request.user)
+    profile_stats["techstack_category"] = UserTechnicalSkillSection.objects.get_user_techstack(user)
+    profile_stats["profile_projects"] = Project.objects.get_user_projects(user)
     context = {
         "username":user.username,
         "email":user.email,
-        "user":user
+        "user":user,
+        "profile_sections":profile_stats["profile_sections"],
+        "techstack_category":profile_stats["techstack_category"],
+        "user_projects":profile_stats["profile_projects"]
     }
     return render(request, "html/profile.html", context)
 def login_page(request):

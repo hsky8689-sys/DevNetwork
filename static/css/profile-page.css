@@ -1,7 +1,7 @@
-body{
-    font-family: "Ubuntu Mono", serif;
+body {
+    font-family: "Ubuntu Mono", monospace;
     font-size: 15px;
-    background-color: cornflowerblue;
+    background: linear-gradient(135deg, cornflowerblue, skyblue);
     margin: 0;
     padding: 20px;
 }
@@ -45,4 +45,48 @@ div.buttons-bar input[type="button"]:hover {
     max-lines: 1500;
     cursor: pointer;
     z-index: 0;
+}
+li { margin: 8px 0; }
+hr { border: none; height: 2px; background: #3498db; }
+/*Profile pic and background attributes*/
+.profile-data{
+    position: relative;
+    width: 99%;
+    height: 400px;
+    margin: 20px auto;
+    background-color: white;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.cover-photo{
+    width: 100%;
+    height: 100%;
+}
+.cover-photo img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 9;
+    display: block;
+}
+.avatar-container{
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border:6px solid white;
+    background-color: gray;
+    z-index: 10;
+    overflow: hidden;
+}
+.username-container.h1{
+    background-color: black;
+}
+.avatar-container img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }

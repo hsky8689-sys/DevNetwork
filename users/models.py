@@ -39,7 +39,7 @@ class User(AbstractBaseUser,PermissionsMixin):
         db_table = 'users'
         #managed = False
 
-class UserProfileData:
+class UserProfileData(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     profile_picture = models.ImageField(
         upload_to='users/profiles/%Y/%m/%d/',
@@ -118,6 +118,7 @@ class CustomUserProfileSectionManager(BaseUserManager):
             for key, value in settings.DEFAULT_SECTIONS.items()
         ]
         UserProfileSection.objects.bulk_create(sections_data)
+
 class UserProfileSection(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     name = models.CharField(max_length=100,blank=False)
@@ -126,23 +127,20 @@ class UserProfileSection(models.Model):
     hidden = models.BooleanField(default=False)
     class Meta:
         db_table = 'profile_sections'
+
 class UserTechnicalSkillsManager(BaseUserManager):
-    def create_user_default_techstack(self,user):
+    def add_user_skill(self,user):
+        pass
+    def remove_user_skill(self,user):
+        pass
+
+    def get_skills_from_section(self, section_id):
         """
-        Creates the default tech stack categories for any user profile after creating account
-        :param user:
+
+        :param section_id:
         :return:
         """
-        default_sections = [
-                UserTechnicalSkill(name=name,user=user)
-                for name in config('DEFAULT_TECHSTACK_CATEGORIES')
-        ]
-        self.bulk_create(default_sections)
-class UserTechnicalSkillSection(models.Model):
-    name = models.CharField(max_length=100,blank=False)
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    class Meta:
-        db_table = 'technical_skill_sections'
+        return self.filter(section_id=section_id)
 
 class UserTechnicalSkill(models.Model):
     name = models.CharField(max_length=100,blank=False)
@@ -150,6 +148,41 @@ class UserTechnicalSkill(models.Model):
     objects = UserTechnicalSkillsManager()
     class Meta:
         db_table = 'technical_skills'
+
+class UserTechnicalSkillSectionManager(BaseUserManager):
+    def create_user_default_techstack(self,user):
+        """
+        Creates the default tech stack categories for any user profile after creating account
+        :param user:
+        :return:
+        """
+        default_sections = [
+                UserTechnicalSkillSection(name=name,user_id=user.id)
+                for name in config('DEFAULT_TECHSTACK_CATEGORIES')
+        ]
+        print(default_sections)
+        self.bulk_create(default_sections)
+
+    def get_user_techstack(self,user):
+        """
+        Returns an user's whole techstack
+        :param user:
+        :return:A dictionary with elements of type "tech-stack category":"User skills from that one category"
+        """
+        sections = self.filter(user=user)
+        tech_dict = {}
+        for section in sections:
+            tech_dict[section] = []
+            for skill in UserTechnicalSkill.objects.get_skills_from_section(section.id):
+                tech_dict[section].append(skill)
+        return tech_dict
+
+class UserTechnicalSkillSection(models.Model):
+    name = models.CharField(max_length=100,blank=False)
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    objects = UserTechnicalSkillSectionManager()
+    class Meta:
+        db_table = 'technical_skill_sections'
 
 class UserExperienceSubsection(models.Model):
     name = models.CharField(max_length=100,blank=False)
