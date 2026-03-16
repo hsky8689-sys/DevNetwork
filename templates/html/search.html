@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search page</title>
+    <link rel="stylesheet" href="{% static 'css/search-page.css' %}">
+    <script>
+        function getCookie(name){
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        async function searchQuery(){
+             const query = document.getElementById("searchbar").value.trim();
+             if(!query){
+                alert('search for something!!');
+                return;
+             }
+             query.innerHTML='';
+             try{
+                const response = await fetch('/users/search/api/',{
+                    method:'POST',
+                    headers:{
+                        'X-CSRFToken':getCookie('csrftoken'),
+                        'Content-Type':'application/json'
+                    },
+                    body: JSON.stringify({query:query}) 
+                });
+                const data = await response.json();
+                if(data.status == 'success'){
+                    displayResults(data.results);
+                }
+            }catch (error){
+                alert('Error: '+error)
+            }
+        }
+        async function displayResults(results){
+            console.log('in display results ajungi macar?');
+            const feed = document.getElementById('search-results');
+            if(!feed){
+                alert('Could not get feed element');
+                return;
+            }
+            feed.innerHTML = '';
+            let html = '';
+            if (results.people && results.people.length > 0){
+                html += '<h2>People</h2>';
+                results.people.forEach(person=>{
+                    html += `
+                            <div class="searched-person">
+                                <strong>${person.username}</strong> - ${person.email}
+                            </div>
+    <hr>
+`;
+                });
+            }
+            feed.innerHTML = html || '<p>No results found</p>';
+        }
+        document.getElementById('searchbar').addEventListener('keypress',function (e){
+            if (e.key === 'Enter') searchQuery();
+        })
+    </script>
+</head>
+<body>
+    <div class="header-bar">
+        <input type="text" id="searchbar" placeholder="Type something to search" class="search-bar">
+        <button class="search-button" onclick="searchQuery()">Search</button>
+    </div>
+    <div class="content">
+        <div class="suggested-friends">
+            Maybe you know them
+        </div>
+        <div class="feed" id="search-results">
+            
+        </div>
+        <div class="suggested-projects">
+            Projects you might find interesting
+        </div>
+    </div>
+</body>
+</html>

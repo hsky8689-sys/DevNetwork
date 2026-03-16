@@ -1,5 +1,4 @@
 {% load static %}
-<script src="{% static 'js/profile-edit.js' %}"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,11 +6,78 @@
         <title>Profile page {{username}}</title>
         <link rel="stylesheet" href="{% static 'css/profile-page.css' %}">
         <link rel="author" href="{% static 'css/img' %}">
+        <script>
+    function getCookie(name){
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        async function goToSearch(){
+           try{
+        const response = await fetch('/users/search/', {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        const data = await response.json();
+        if(data.status === 'success'){
+            window.location.href = '/users/search/';  // Tot redirect
+        }
+    } catch(error) {
+        window.location.href = '/users/search/';
+    }
+        }
+        async function addSkill(categoryId){
+        const input = document.querySelector
+        ('input[data-category-id="${categoryId}"]');
+        const name = input.value.trim();
+        if(!name){
+            alert('Scrie un skill');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('name',name);
+        formData.append('section_id',categoryId);
+
+        try{
+            const response = await fetch('/users/api/add-skill/',{
+                method:'POST',
+                body:formData,
+                headers:{
+                    'X-CSRFToken':getCookie('csrftoken')
+                }
+            });
+            const data = await response.json();
+            if(data.status == 'success'){
+                alert('Skill added to '+input.placeholder);
+                input.value="";
+            }
+        }catch (error){
+            alert('Error: '+error)
+        }
+        }
+        async function deleteSkill(skillId) {
+            if (confirm('Ștergi skill-ul?')) {
+                await fetch(`/api/delete-skill/${skillId}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            location.reload();
+        }
+    }
+</script>
 </head>
 <body>
     <div class="buttons-bar">
         <input type="button" value="Login">
-        <input type="button" value="Search">
+        <input type="button" onclick="goToSearch({{user.id}})" value="Search">
         <input type="button" value="Make new project">
         <input type="button" value="Inbox">
         <input type="button" value="Conversations">
@@ -27,8 +93,10 @@
         </div>
         <div class="near-avatar">
                 <h1>{{username}}</h1>
-                <button class="add-friend">Add friend</button>
-                <button class="message">Message</button>
+                {% if not is_owner %}
+                    <button class="add-friend">Add friend</button>
+                    <button class="message">Message</button>
+                {% endif %}
         </div>
     </div>
     <div class="skills-tab">
@@ -39,8 +107,11 @@
                     <button class="skill">{{skill.name}}</button>
                 {% endfor %}
                 {% if is_owner %}
-                    <input type="text" class="add-new-name" placeholder="Add new skill">
-                    <button class="add-btn" onclick="addSkill()">Add skill</button>
+                    <input type="text" 
+                            class="add-new-name" 
+                            data-category-id = "{{ category.id }}"
+                            placeholder="Add new skill to {{ category.name }}">
+                    <button class="add-btn" onclick="addSkill({{ category.id }})">Add skill</button>
                 {% endif %}
                 <hr>
         {% endfor %}
@@ -60,6 +131,10 @@
                 <td>User has no visible sections</td>
             </tr>
             {% endfor %}
+            {% if is_owner %}
+                <input type="text" class="add-new-name" placeholder="Add new profile section">
+                <button class="add-btn" onclick="addProfileSection()">Add skill</button>
+            {% endif %}
     </div>
     <div class="community-projects">
          {% for proj in user_projects%}

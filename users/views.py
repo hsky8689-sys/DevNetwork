@@ -1,6 +1,9 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -9,6 +12,30 @@ from projects.models import Project
 from .models import User, UserProfileSection, UserTechnicalSkillSection,UserTechnicalSkill
 
 # Create your views here.
+@login_required
+def search_page(request):
+    return render(request, 'html/search.html', {'user_id': request.user.id})
+@login_required
+@csrf_exempt
+def search_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            query = data.get('query','').lower()
+
+            people = User.objects.filter(
+                Q(username__icontains=query) |
+                Q(email__icontains=query)
+            ).values('id','username','email')[:10]
+            print(list(people))
+            return JsonResponse({
+                'status':'success',
+                'results':{'people':list(people)}
+            })
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 def signup_page(request):
     if request.method == 'POST':
         username = request.POST['username']

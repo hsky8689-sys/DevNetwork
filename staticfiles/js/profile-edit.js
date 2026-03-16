@@ -12,33 +12,29 @@ function getCookie(name){
             }
             return cookieValue;
         }
-        async function addSkill(categoryId){
-        const input = document.querySelector
-        ('input[data-category-id="${categoryId}"]');
-        const name = input.value.trim();
-        if(!name){
-            alert('Scrie un skill');
-            return;
-        }
+        async function addSkill(){
+        const name = document.getElementById('new-skill-name').value;
+        const section_id = document.getElementById('skill-section').value;
+
         const formData = new FormData();
         formData.append('name',name);
-        formData.append('section_id',categoryId);
+        formData.append('section_id',section_id);
 
         try{
-            const response = await fetch('/users/api/add-skill/',{
+            const response = await fetch('/api/add-skill/',{
                 method:'POST',
                 body:formData,
                 headers:{
                     'X-CSRFToken':getCookie('csrftoken')
                 }
-            });
-            const data = await response.json();
-            if(data.status == 'success'){
-                alert('Skill added to '+input.placeholder);
-                input.value="";
-            }
+                });
+                const data = await response.json();
+                if(data.status === 'success'){
+                  alert('Skill added');
+                  location.reload();
+                }
         }catch (error){
-            alert('Error: '+error)
+            alert('Error');
         }
         }
         async function deleteSkill(skillId) {
