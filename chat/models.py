@@ -8,7 +8,7 @@ class Message(models.Model):
                     ,related_name='messages'
                     )
     content = models.CharField(max_length=10000)
-    timestamp = models.DateTimeField(default=datetime.now())
+    timestamp = models.DateTimeField(default='3000-10-10 ')
     image = models.ImageField(default='fallback.png',blank=True)
 
     class Meta:

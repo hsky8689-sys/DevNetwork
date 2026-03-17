@@ -21,6 +21,19 @@
             }
             return cookieValue;
         }
+    async function goToProjectCreation(){
+           try{
+        const response = await fetch('/users/create-new-project/', {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        const data = await response.json();
+        if(data.status === 'success'){
+            window.location.href = '/users/create-new-project/';  // Tot redirect
+        }
+    } catch(error) {
+        window.location.href = '/users/create-new-project/';
+    }
+    }
         async function goToSearch(){
            try{
         const response = await fetch('/users/search/', {
@@ -33,7 +46,7 @@
     } catch(error) {
         window.location.href = '/users/search/';
     }
-        }
+    }
         async function addSkill(categoryId){
         const input = document.querySelector
         ('input[data-category-id="${categoryId}"]');
@@ -77,8 +90,8 @@
 <body>
     <div class="buttons-bar">
         <input type="button" value="Login">
-        <input type="button" onclick="goToSearch({{user.id}})" value="Search">
-        <input type="button" value="Make new project">
+        <input type="button" onclick="goToSearch()" value="Search">
+        <input type="button" onclick="goToProjectCreation()" value="Make new project">
         <input type="button" value="Inbox">
         <input type="button" value="Conversations">
         <input type="button" value="Connections">

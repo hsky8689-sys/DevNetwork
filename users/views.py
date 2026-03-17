@@ -68,9 +68,13 @@ def acces_profile(request,username):
         "user_posts":[]
     }
     if request.user.username == username:
-        profile_stats["profile_sections"] = UserProfileSection.objects.get_user_profile_sections(request.user,includehidden=True)
+        profile_stats["profile_sections"] = (UserProfileSection.
+                                        objects.
+                                        get_user_profile_sections(user,includehidden=True))
     else:
-        profile_stats["profile_sections"] = UserProfileSection.objects.get_user_profile_sections(user)
+        profile_stats["profile_sections"] = (UserProfileSection.
+                                             objects.
+                                             get_user_profile_sections(user, includehidden=False))
     profile_stats["techstack_category"] = UserTechnicalSkillSection.objects.get_user_techstack(user)
     profile_stats["profile_projects"] = Project.objects.get_user_projects(user)
     context = {
@@ -101,6 +105,16 @@ def login_page(request):
         if request.user.is_authenticated:
             logout(request)
         return render(request, "html/login.html")
+@require_http_methods(["GET","POST"])
+def create_project(request):
+    if request.method == 'GET':
+        return render(request,'html/create_project.html',{"user_id":request.user.id})
+    elif request.method == 'POST':
+        name = request.POST['name']
+        description = request.POST['description']
+        user_id = request.user.id
+        Project.objects.create_project(user_id,name, description)
+
 @require_http_methods(["POST"])
 @csrf_exempt
 def api_add_skill(request):

@@ -1,75 +1,10 @@
-from decouple import config
-from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin
 from datetime import datetime
-class CustomUserManager(BaseUserManager):
-    def create_user(self,username,email,password,birthday):
-        from django.conf import settings
-        user = self.model(username=username, email=email, birthday=birthday)
-        user.set_password(password)
-        user.save(using=self._db)
-
-        # LOOP INDIVIDUAL - 100% SIGUR
-        """""""""""""""""""""""""""""""""""""""""""""""""""""
-        user = User.objects.get(id=user.id)  # Fresh object
-        for key, value in settings.DEFAULT_SECTIONS.items():
-            UserProfileSection.objects.get_or_create(
-                user_id=user.id,
-                name=key,
-                defaults={'content': value, 'hidden': False}
-            )
-
-        # Techstack la fel
-        for name in settings.DEFAULT_TECHSTACK_CATEGORIES:
-            UserTechnicalSkillSection.objects.get_or_create(
-                user=user,
-                name=name
-            )
-        """""""""""""""""""""""""""""""""""""""""""""""""""""
-        UserProfileSection.objects.create_default_user_sections(user.id)
-        UserTechnicalSkillSection.objects.create_user_default_techstack(user.id)
-        return user
-    def create_superuser(self, username, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        return self.create_user(username, email, password, **extra_fields)
-    def get_by_natural_key(self, username):
-        return self.get(**{self.model.USERNAME_FIELD:username})
-
-class User(AbstractBaseUser,PermissionsMixin):
-    username = models.CharField(max_length=100, blank=False, unique=True)
-    login_date = models.DateTimeField(default=datetime.now)
-    email = models.CharField(max_length=100, blank=False, unique=True)
-    birthday = models.DateField(null=True,blank=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    objects = CustomUserManager()
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email','password']
-    class Meta:
-        db_table = 'users'
-        #managed = False
-
-class UserProfileData(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    profile_picture = models.ImageField(
-        upload_to='users/profiles/%Y/%m/%d/',
-        blank=True,
-        null=True,
-        default='users/profile_pictures/sbcf-default-avatar.png'
-    )
-    background_picture = models.ImageField(
-        upload_to='users/background_pictures/%Y/%m/%d/',
-        blank=True,
-        null=True,
-        default='users/background_pictures/sbcf-default-backgrounds.png'
-    )
-    biography = models.CharField(max_length=200,blank=False,default="Welcome to my profile!")
-    class Meta:
-        db_table = 'profile_datas'
+from devnetwork import settings
+User = settings.AUTH_USER_MODEL
 class CustomUserProfileSectionManager(BaseUserManager):
-    def create_user_profile_section(self,user:User,name:str,content:str,hidden:bool):
+    def create_user_profile_section(self,user:settings.AUTH_USER_MODEL,name:str,content:str,hidden:bool):
         """
         Creates a new profile section with no which will be added to an user's personal page
         :param user: The specified user
@@ -115,7 +50,7 @@ class CustomUserProfileSectionManager(BaseUserManager):
         """
         if user is None:
             return []
-        return self.filter(user_id=user.id) if includehidden else self.filter(user_id=user.id,hidden=False)
+        return self.filter(user_id=user.id,hidden=includehidden)
     def create_default_user_sections(self, user_id):
         """
         Creates the default user sections after the account gets created
@@ -123,12 +58,26 @@ class CustomUserProfileSectionManager(BaseUserManager):
         :return:None
         """
         from django.conf import settings
-        for key, value in settings.DEFAULT_SECTIONS.items():
-            UserProfileSection.objects.get_or_create(
-                user_id=user_id,
-                name=key,
-                defaults={'content': value, 'hidden': False}
-            )
+        import django.db as db
+        if User.objects.get(id=user_id) is None:
+            raise ValueError('There is no user with the given id')
+
+        print(User.objects.get(id=user_id))
+        try:
+            sections_data = [
+                UserProfileSection(user_id=user_id, name=key, content=value, hidden=False)
+                for key, value in settings.DEFAULT_SECTIONS.items()
+            ]
+            print(sections_data)
+            UserProfileSection.objects.bulk_create(sections_data,ignore_conflicts=True)
+        except db.OperationalError as e:
+            print(str(e))
+        except db.Error as e:
+            print(str(e))
+        except RuntimeError as e:
+            print(f'Unknown error of type{type(e)} with content {str(e)}')
+        except Exception as e:
+            print(f'Unknown error of type{type(e)} with content {str(e)}')
 
 class UserProfileSection(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -172,12 +121,14 @@ class UserTechnicalSkillSectionManager(BaseUserManager):
         :return:
         """
         from django.conf import settings
-        user = User.objects.get(id=user_id)
-        for name in settings.DEFAULT_TECHSTACK_CATEGORIES:
-            UserTechnicalSkillSection.objects.get_or_create(
-                user=user,
-                name=name
-            )
+        if User.objects.get(id=user_id) is None:
+            raise ValueError('There is no user with the given id')
+        default_techstack = [
+            UserTechnicalSkillSection(user_id=user_id, name=value)
+            for value in settings.DEFAULT_TECHSTACK_CATEGORIES
+        ]
+        print(default_techstack)
+        self.bulk_create(default_techstack)
 
     def get_user_techstack(self,user):
         """
@@ -203,6 +154,7 @@ class UserTechnicalSkillSection(models.Model):
 class UserTechnicalSkill(models.Model):
     name = models.CharField(max_length=100,blank=False)
     section = models.ForeignKey(UserTechnicalSkillSection,on_delete=models.CASCADE)
+
     objects = UserTechnicalSkillsManager()
     class Meta:
         db_table = 'technical_skills'

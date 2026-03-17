@@ -58,7 +58,7 @@
                 results.people.forEach(person=>{
                     html += `
                             <div class="searched-person">
-                                <strong>${person.username}</strong> - ${person.email}
+                                <strong><a href="/users/profile/${person.username}/">${person.username}</a></strong> - ${person.email}
                             </div>
     <hr>
 `;

@@ -33,6 +33,12 @@ ROOT_URLCONF='devnetwork.urls'
 
 # Application definition
 
+DEFAULT_TECHSTACK_CATEGORIES=['Frontend',
+                              'Backend',
+                              'Database',
+                              'Tools'
+                               ]
+
 DEFAULT_SECTIONS = {
     'About me': config('ABOUT_ME_DEFAULT'),
     'Skills': config('SKILLS_DEFAULT'),
