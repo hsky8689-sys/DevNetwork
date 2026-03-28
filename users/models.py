@@ -212,7 +212,8 @@ class RequestManager(models.Manager):
         :param receiver:
         :return:
         """
-        pass
+        request = self.model(sender=sender,receiver=receiver,request_type='friend',status='pending',timestamp=datetime.now)
+        request.save()
     def accept_request(self,request):
         pass
     def deny_request(self,request):

@@ -11,7 +11,8 @@ from projects.models import Project, UserProjectRole
 @login_required
 def create_project(request):
     if request.method == 'POST':
-        pass
+
+        open_project_page(request)
     else:
         JsonResponse({'status': 'error',
                       'code' : 404
@@ -26,7 +27,7 @@ def open_project_page(request,name):
             'status':'failed',
             'code':404
         })
-    staff = Project.objects.get_all_users_in_project(project)
+    staff = UserProjectRole.objects.get_all_users_in_project(project)
     roles = staff.keys()
     context_data = {
         'role': 'visitor',
