@@ -1,3 +1,4 @@
+import django.db
 from decouple import config
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db.models import Q
@@ -6,7 +7,6 @@ from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,Permissi
 from datetime import datetime
 class CustomUserManager(BaseUserManager):
     def create_user(self,username,email,password,birthday):
-        from django.conf import settings
         user = self.model(username=username, email=email, birthday=birthday)
         user.set_password(password)
         user.save(using=self._db)
@@ -212,8 +212,17 @@ class RequestManager(models.Manager):
         :param receiver:
         :return:
         """
-        request = self.model(sender=sender,receiver=receiver,request_type='friend',status='pending',timestamp=datetime.now)
-        request.save()
+        try:
+            request = self.get_or_create(
+                    sender=sender,
+                    receiver=receiver,
+                    request_type='friend',
+                    status='pending',
+                    timestamp=datetime.now
+                    )
+            return request[1]
+        except django.db.DatabaseError as err:
+            print(str(err))
     def accept_request(self,request):
         pass
     def deny_request(self,request):
@@ -223,8 +232,18 @@ class RequestManager(models.Manager):
     def send_project_invitation(self,sender,receiver):
         pass
 class UserRequest(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(default=datetime.now)
+    pk = models.CompositePrimaryKey("sender_id","receiver_id")
+    sender = models.ForeignKey(
+            User,
+            on_delete=models.CASCADE,
+            related_name='request_sender'
+    )
+    receiver = models.ForeignKey(
+            User,
+            on_delete=models.CASCADE,
+            related_name='request_receiver'
+    )
+    timestamp = models.DateTimeField(default=datetime.now,db_index=True)
     request_type = models.CharField(
         max_length=20,
         choices=[('friend', 'friend'), ('project', 'project')]
@@ -235,7 +254,7 @@ class UserRequest(models.Model):
     )
     objects = RequestManager()
     class Meta:
-        db_table = 'requestss'
+        db_table = 'requests'
         constraints = [
             models.CheckConstraint(
                 condition=Q(request_type__in=['friend','project']),

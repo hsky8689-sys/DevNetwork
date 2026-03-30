@@ -1,11 +1,10 @@
 from collections import defaultdict
 
 import django.db
-from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.decorators import login_required
 from django.db import models
 
 from users.models import User
+
 
 class ProjectManager(models.Manager):
     def makeNewOwner(self,project):
@@ -52,12 +51,28 @@ class Project(models.Model):
         db_table = 'projects'
         managed = False
 
+class ProjectDomainManager(models.Manager):
+    def add_domain_to_project(self,project,domain_name):
+        item = self.model(domain=domain_name,project_id=project.id)
+        item.save()
+    def get_project_domains(self,project):
+        return self.filter(project_id=project.id).values('domain')
+
+
 class ProjectDomain(models.Model):
     project=models.ForeignKey(Project,on_delete=models.CASCADE)
     domain=models.CharField(max_length=100,blank=False,null=False,default='new domain')
+    objects = ProjectDomainManager()
+
     class Meta:
         db_table = 'project_domains'
-        managed = False
+
+class ProjectTaskManager(models.Manager):
+    def add_task_to_project(self):
+        pass
+    def remove_task_from_project(self):
+        pass
+
 
 class ProjectTask(models.Model):
     project = models.ForeignKey(Project,on_delete=models.CASCADE)
@@ -65,6 +80,8 @@ class ProjectTask(models.Model):
     description = models.CharField(max_length=300,default='Describe the task..',blank=True)
     start_date = models.DateField(default='1000-10-10')
     end_date = models.DateField(default='3000-10-10')
+    finished = models.BooleanField(default=False)
+    objects = ProjectTaskManager()
     class Meta:
         db_table = 'projects_tasks'
         managed = False
@@ -146,7 +163,7 @@ class UserProjectRoleManager(models.Manager):
         role.save()
     def get_user_role_in_project(self, project, user):
         """
-        Checks if an user is already in a project
+        Gets an user's role in a project if it exists,else labels them as visitors
         :param project:
         :param user:
         :return:
@@ -236,7 +253,6 @@ class UserProjectRole(models.Model):
     objects = UserProjectRoleManager()
     class Meta:
         db_table = 'user_project_roles'
-
 
 class ProjectTaskParticipation(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=True,blank=True)

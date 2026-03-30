@@ -16,7 +16,7 @@ urlpatterns = [
     template_name="html/logout.html",next_page="login.html")
     ,name="logout"),
     path('api/add-skill/',api_add_skill,name='api_add_skill'),
-    path('search/', search_page, name='search_page'),      # GET = pagina
+    path('search/', search_page, name='search_page'),
     path('search/api/', search_api, name='search_api'),
     path('api/delete-skill/',api_delete_skill,name='api_delete_skill'),
     path('create-new-project/',create_project,name='create_project')

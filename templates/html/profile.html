@@ -28,8 +28,8 @@
         <div class="near-avatar">
                 <h1>{{username}}</h1>
                 {% if not is_owner %}
-                    <button class="add-friend">Add friend</button>
-                    <button class="message">Message</button>
+                    <button class="add-friend" onclick="sendFriendRequest()">Add friend</button>
+                    <button class="message" onclick="joinUserChat()">Message</button>
                 {% endif %}
         </div>
     </div>

@@ -46,7 +46,7 @@ body{
     padding: 25px;
     background: white;
     border-radius: 20px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);  /* Umbră puternică */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
     border: 2px solid #e0e0e0;
     max-height: 80vh;
     overflow-y: auto;
@@ -63,4 +63,3 @@ body{
     max-width: 200px;
     width: 55%;
 }
-

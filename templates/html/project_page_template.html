@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ stats.project_name }}</title>
+    <link rel="stylesheet" href="{% static 'css/project-page.css' %}">
+    <script src="{% static 'js/project-page.js' %}" defer></script>
+    <script src="{% static 'js/edit-profile.js' %}" defer></script>
+</head>
+<body>
+    <div class="main-buttons">
+        <button onclick="goToMainProjectPage('{{ stats.project_name }}')">Main project page</button>
+        <button onclick="goToSearch()">Search</button>
+        <button onclick="goToProjectMembersPage('{{ stats.project_name }}')">See members</button>
+        {% if stats.visitor_permissions.can_change_project_settings %}
+            <button>Settings</button>
+        {% endif %}
+        {% if stats.visitor_permissions.can_invite_others %}
+            <button>Invite others</button>
+        {% endif %}
+        <button>Share page</button>
+        {% if stats.role != 'visitor' %}
+            <button>View task history</button>    
+        {% endif %}
+    </div>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

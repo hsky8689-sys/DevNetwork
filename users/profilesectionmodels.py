@@ -1,7 +1,8 @@
+from django.contrib.auth.models import BaseUserManager
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin
-from datetime import datetime
+
 from devnetwork import settings
+
 User = settings.AUTH_USER_MODEL
 class CustomUserProfileSectionManager(BaseUserManager):
     def create_user_profile_section(self,user:settings.AUTH_USER_MODEL,name:str,content:str,hidden:bool):
@@ -13,7 +14,6 @@ class CustomUserProfileSectionManager(BaseUserManager):
         :param hidden: States if the section will be or not hidden to foreign profile visitors
         :return: None
         """
-        from devnetwork import settings
         new_section = (self.create(user=user,
                                name=name,
                                content=content,
