@@ -60,6 +60,18 @@ class ProjectDomainManager(models.Manager):
         domains = [ProjectDomain(project=project,domain=name) for name in domain_names]
         succes = self.bulk_create(domains)
         return succes
+    def remove_domains_from_project(self,project,domain_names):
+        """
+
+        :param project:
+        :param domain_names:
+        :return:
+        """
+        try:
+            domains = self.filter(project=project,domain__in=domain_names).delete()
+            return domains
+        except django.db.DatabaseError as e:
+            print(str(e))
     def get_project_domains(self,project):
         return self.filter(project_id=project.id).values('domain')
 
@@ -68,7 +80,6 @@ class ProjectDomain(models.Model):
     project=models.ForeignKey(Project,on_delete=models.CASCADE)
     domain=models.CharField(max_length=100,blank=False,null=False,default='new domain')
     objects = ProjectDomainManager()
-
     class Meta:
         db_table = 'project_domains'
 

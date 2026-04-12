@@ -1,7 +1,7 @@
 from django.urls import path
 
 from projects.views import open_project_page, open_project_members_page, open_project_settings, api_get_project_domains, \
-    api_get_project_requirements
+    api_get_project_requirements, api_add_project_domains, api_delete_project_domains
 
 app_name = 'projects'
 
@@ -12,7 +12,9 @@ urlpatterns = [
     path("api-get-project-domains",api_get_project_domains,name="get-project-domains"),
     path("settings/<str:name>/api-project-domains", api_get_project_domains, name="get-domains-from-settings"),
     path("<str:name>/api-get-project-requirements",api_get_project_requirements,name="get-requirements"),
-    path("settings/<str:name>/api-project-domains",api_get_project_requirements,name="get-requirements-from-settings")
+    path("settings/<str:name>/api-project-domains",api_get_project_requirements,name="get-requirements-from-settings"),
+    path("settings/<str:name>/api-add-domains",api_add_project_domains,name="add-domains-to-project"),
+    path("settings/<str:name>/api-remove-domains",api_delete_project_domains,name="add-domains-to-project")
 ]
 
 

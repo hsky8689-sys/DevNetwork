@@ -77,19 +77,44 @@ def api_get_project_domains(request,name):
         return JsonResponse({'status': 'error', 'code': 500})
 @require_http_methods(["POST"])
 @csrf_exempt
-def api_add_project_domains(request,project):
+def api_add_project_domains(request,name):
     try:
         if request.method == 'POST':
-            data = json.loads(request.body)
-            domains = data.get('domains',[])
-            succes = ProjectDomain.objects.add_domains_to_project(project,domains)
-            return JsonResponse({'status':'succes' if len(succes) == len(domains) else 'error',
+            project = get_object_or_404(Project,name=name)
+            role = UserProjectRole.objects.get_user_role_in_project(project,request.user)
+            if UserProjectRole.objects.get_role_permissions(role,project)['can_change_project_settings']:
+                data = json.loads(request.body)
+                domains = data.get('newDomains',[])
+                succes = ProjectDomain.objects.add_domains_to_project(project,domains)
+                return JsonResponse({'status':'succes' if len(succes) == len(domains) else 'error',
                              'code':200 if len(succes) == len(domains) else 404
-            })
+                })
+            else:
+                return JsonResponse({'status':'Unauthorized access','code':403})
     except Exception as e:
         print(str(e))
     except django.db.DatabaseError:
-        return JsonResponse({'status': 'error', 'code': 404})
+        return JsonResponse({'status': 'error', 'code': 500})
+@require_http_methods(["POST"])
+@csrf_exempt
+def api_delete_project_domains(request,name):
+    try:
+        if request.method == 'POST':
+            project = get_object_or_404(Project, name=name)
+            role = UserProjectRole.objects.get_user_role_in_project(project, request.user)
+            if UserProjectRole.objects.get_role_permissions(role, project)['can_change_project_settings']:
+                data = json.loads(request.body)
+                domains = data.get('removedDomains', [])
+                succes = ProjectDomain.objects.remove_domains_from_project(project, domains)
+                return JsonResponse({'status': 'succes' if len(succes) == len(domains) else 'error',
+                                     'code': 200 if len(succes) == len(domains) else 404
+                                     })
+            else:
+                return JsonResponse({'status': 'Unauthorized access', 'code': 403})
+    except Exception as e:
+        print(str(e))
+    except django.db.DatabaseError:
+        return JsonResponse({'status': 'error', 'code': 500})
 @require_http_methods(["GET"])
 @csrf_exempt
 def api_get_project_requirements(request,name):

@@ -14,7 +14,8 @@ function getCookie(name){
 }
 function loadPage(context){
     const role = context.role;
-    alert(role + ' ' + JSON.stringify(context));
+    window.localStorage.setItem("newDomains","[]");
+    window.localStorage.setItem("removedDomains","[]");
     const domains_div = document.getElementsByClassName("project-domains");
     if(role === 'visitor'){
         console.log('fetching requirements');
