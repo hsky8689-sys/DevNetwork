@@ -100,3 +100,54 @@ function getCookie(name){
             location.reload();
         }
     }
+async function handleFriendRequest(action){
+    try{
+        const user_id = djangoContext.user.id;
+        var desiredUrl = ``;
+        switch (action) {
+            case 'send':{
+                desiredUrl = `/users/${user_id}/send-friend-request/`;
+                break;
+            }
+            case 'accept':{
+                desiredUrl=`/users/${user_id}/accept-friend-request/`;
+                break;
+            }
+            case 'deny':{
+                desiredUrl=`/users/${user_id}/deny-friend-request/`;
+                break;
+            }
+            default:{
+                alert(`Wrong operation requested :${action}`);
+                return;
+            }
+        }
+
+        const response = await fetch(`/users/${user_id}/accept-friend-request/`,{
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken')}
+                });
+        if(response.ok){
+            location.reload();
+        }
+        else{
+            alert(`Request wasn't sent due to error ${response.status}`);
+        }
+    }catch (error){
+        alert(error);
+    }
+}
+async function goToConnections(){
+    try{
+        const desiredUrl = `/users/connections-page/`;
+        const response = await fetch(`/users/connections-page/`,{
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        }
+        );
+        if(response.ok){
+            window.location = desiredUrl;
+        }
+    }catch (error){
+        alert(error);
+    }
+}

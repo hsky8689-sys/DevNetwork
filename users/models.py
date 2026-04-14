@@ -1,10 +1,12 @@
 import django.db
-from decouple import config
-from django.contrib.contenttypes.fields import GenericRelation
 from django.db.models import Q
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin
 from datetime import datetime
+from django.utils import timezone
+from django.db import transaction
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self,username,email,password,birthday):
         user = self.model(username=username, email=email, birthday=birthday)
@@ -205,6 +207,13 @@ class Post(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
 
 class RequestManager(models.Manager):
+    def find_request(self,sender,receiver):
+        try:
+            found = self.filter(Q(sender=sender,receiver=receiver)|Q(sender=receiver,receiver=sender))
+            return found
+        except django.db.DatabaseError as e:
+            print(str(e))
+            return None
     def send_friend_request(self,sender,receiver):
         """
 
@@ -213,20 +222,64 @@ class RequestManager(models.Manager):
         :return:
         """
         try:
-            request = self.get_or_create(
-                    sender=sender,
-                    receiver=receiver,
-                    request_type='friend',
-                    status='pending',
-                    timestamp=datetime.now
-                    )
-            return request[1]
+            try:
+                found = self.find_request(sender, receiver)
+                if found:
+                    return None
+            except ValueError:
+                pass
+
+            obj, created = self.get_or_create(
+                sender=sender,
+                receiver=receiver,
+                request_type='friend',
+                status= 'pending',
+                timestamp= timezone.now()
+            )
+            return obj
+        except Exception as err:
+            print(f"Eroare ORM: {str(err)}")
+            return None
+    def accept_request(self,request):
+        try:
+            with transaction.atomic():
+                found = self.select_for_update().filter(
+                    sender=request.sender,
+                    receiver=request.receiver
+                ).first()
+                if found is None:
+                    raise django.db.DatabaseError("Request wasn't found")
+                if found.status != 'pending':
+                    raise ValueError("Request was already handled")
+                found.status = 'accepted'
+                Friendship.objects.create(sender=request.sender,receiver=request.receiver)
+                found.save()
+                return found
+        except (django.db.DatabaseError,ValueError) as err:
+            print(f"Error handling request: {str(err)}")
+            return None
+    def deny_request(self,request):
+        try:
+            found = self.find_request(request.sender, request.receiver)
+            if found is None:
+                raise django.db.DatabaseError("Request wasn't found")
+            if found.status != 'pending':
+                raise ValueError("Request was already handled")
+            found.select_for_update()
+            found.status = 'declined'
+            found.save()
+            return found
         except django.db.DatabaseError as err:
             print(str(err))
-    def accept_request(self,request):
-        pass
-    def deny_request(self,request):
-        pass
+            return None
+        except ValueError as err:
+            print(str(err))
+            return None
+    def get_user_requests(self,user):
+        try:
+            return self.filter(receiver=user)
+        except django.db.DatabaseError:
+            return []
     def send_project_join_request(self,sender,project):
         pass
     def send_project_invitation(self,sender,receiver):
@@ -265,3 +318,9 @@ class UserRequest(models.Model):
                 name='check_valid_status',
             )
         ]
+class Friendship(models.Model):
+    sender = models.ForeignKey(User,on_delete=models.CASCADE,related_name='friend1')
+    receiver = models.ForeignKey(User,on_delete=models.CASCADE,related_name='friend2')
+    startdate = models.DateTimeField(default=datetime.now)
+    class Meta:
+        db_table = 'friendships'

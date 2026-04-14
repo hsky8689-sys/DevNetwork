@@ -194,3 +194,19 @@ position:absolute;
     border-radius: 10px;
     background-color: white;
 }
+.received-requests{
+    max-width: 2000px;
+    max-height: 1500px;
+    width:85%;
+    height:70%;
+    justify-content: center;
+    border-radius: 10px;
+    gap: 10px;
+    margin: auto;
+    display: block;
+    background-color: white;
+    align-self: center;
+}
+.request-button{
+
+}

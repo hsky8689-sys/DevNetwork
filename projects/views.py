@@ -170,7 +170,6 @@ def api_remove_project_requirements(request,name):
                     batches[req[0]].append(req[1])
                 else:
                     batches[req[0]] = [req[1]]
-            print(batches)
             for key in batches.keys():
                 section = section_manager.get(project=project,name=key)
                 manager.remove_skill_requirements(section,batches[key])

@@ -1,0 +1,9 @@
+{% extends 'html/profile_page_template.html' %}
+{% load static %}
+{% block content %}
+    <div class="received-requests">
+        {% for req in context.requests %}
+            <p>Request from {{ req.sender }}</p>
+        {% endfor %}
+    </div>
+{% endblock %}

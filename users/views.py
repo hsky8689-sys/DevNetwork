@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from projects.models import Project
-from .models import User, UserProfileSection, UserTechnicalSkillSection, UserTechnicalSkill
+from .models import User, UserProfileSection, UserTechnicalSkillSection, UserTechnicalSkill, UserRequest
 from .search import SearchManager, SearchFilterData
 
 
@@ -66,7 +66,7 @@ def acces_profile(request,username):
         "profile_sections":[],
         "teckstack_category":{},
         "profile_projects":[],
-        "user_posts":[]
+        "user_posts":[],
     }
     if request.user.username == username:
         profile_stats["profile_sections"] = (UserProfileSection.
@@ -78,15 +78,24 @@ def acces_profile(request,username):
                                              get_user_profile_sections(user, includehidden=False))
     profile_stats["techstack_category"] = UserTechnicalSkillSection.objects.get_user_techstack(user)
     profile_stats["profile_projects"] = Project.objects.get_user_projects(user)
+    requested = False
+    try:
+        friendship_request = UserRequest.objects.find_request(request.user, user)
+        if friendship_request is not None:
+            requested = True
+    except Exception as e:
+            requested = False
     context = {
         "username":user.username,
         "email":user.email,
+        "id":user.id,
         "user":user,
         "profile_sections":profile_stats["profile_sections"],
         "techstack_category":profile_stats["techstack_category"],
         "user_projects":profile_stats["profile_projects"],
         "user_posts":profile_stats["user_posts"],
-        "is_owner":request.user.username == username
+        "is_owner":request.user.username == username,
+        "requested_friendship":requested
     }
     return render(request, "html/profile.html", context)
 @login_required
@@ -140,3 +149,59 @@ def api_delete_skill(request,skill_id):
         return JsonResponse({'status': 'success'})
     except UserTechnicalSkill.DoesNotExist:
         return JsonResponse({'status':'error','message':'Skill not found'},status=404)
+@require_http_methods(["POST"])
+@login_required
+def api_send_friend_request(request,receiver):
+    try:
+        # get() aruncă User.DoesNotExist dacă nu găsește, deci nu e nevoie de "is None"
+        user = User.objects.get(id=receiver)
+        if user == request.user:
+            return JsonResponse({'status': 'error', 'message': "Cannot send request to self"}, status=400)
+        # Trimiți obiectul request.user, nu request.user.id
+        sent = UserRequest.objects.send_friend_request(request.user, user)
+        if sent is None:
+            return JsonResponse({'status': 'error', 'message': 'Request already exists or failed'}, status=400)
+        # Aici aveai status 404 pentru "succes", l-am schimbat in 200
+        return JsonResponse({'status': 'succes', 'code': 200})
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+    except Exception as e:
+        print(f"Eroare API: {str(e)}")
+        # Acum view-ul returnează un JSON chiar și când crapă ceva, evitând eroarea 500 în browser
+        return JsonResponse({'status': 'error', 'message': 'Internal Server Error'}, status=500)
+@require_http_methods(["POST"])
+@login_required
+def api_accept_friend_request(request,sender):
+    try:
+        # get() aruncă User.DoesNotExist dacă nu găsește, deci nu e nevoie de "is None"
+        user = User.objects.get(id=sender)
+        if user == request.user:
+            return JsonResponse({'status': 'error', 'message': "Cannot accept request from self"}, status=400)
+        # Trimiți obiectul request.user, nu request.user.id
+        friend_request = UserRequest.objects.find_request(user,request.user)
+        if friend_request is None:
+            return  JsonResponse({'status':'error','message':'No request received from certain user'},status=404)
+        if friend_request.first().status != 'pending':
+            return JsonResponse({'status': 'error', 'message': 'Request has already been handled'}, status=403)
+        sent = UserRequest.objects.accept_request(friend_request.first())
+        if sent is None:
+            return JsonResponse({'status': 'error', 'message': 'Request already exists or failed'}, status=400)
+        # Aici aveai status 404 pentru "succes", l-am schimbat in 200
+        return JsonResponse({'status': 'succes', 'code': 200})
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+    except Exception as e:
+        print(f"Eroare API: {str(e)}")
+        # Acum view-ul returnează un JSON chiar și când crapă ceva, evitând eroarea 500 în browser
+        return JsonResponse({'status': 'error', 'message': 'Internal Server Error'}, status=500)
+@login_required
+def connections_page(request):
+    try:
+        requests = UserRequest.objects.get_user_requests(request.user)
+        return render(request, 'html/connections.html', {'context': {'user': request.user,
+                'requests': requests}
+                })
+    except Exception:
+        return render(request, 'html/connections.html', {'context': {'user': request.user,
+                                                                     'requests': []}
+                                                         })
