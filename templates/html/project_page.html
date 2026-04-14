@@ -1,0 +1,24 @@
+{% extends 'html/project_page_template.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="background-photo"></div>
+    <div class="main-content">
+        <div class="project-domains">
+            {% for name in stats.domains  %}
+                <button>{{name.domain}}</button>         	
+            {% endfor %}
+        </div>
+        <div class="project-related-posts">
+            <h1>Project description</h1>
+            <br>
+            <h2>{{stats.description}}</h2>
+            <hr>
+        </div>
+        <div class="project-task-overview">
+            {% if stats.role != 'visitor' %}
+                <h1>View ongoing tasks</h1>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
