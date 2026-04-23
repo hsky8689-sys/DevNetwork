@@ -3,6 +3,7 @@ from datetime import datetime
 
 import django.db
 from django.db import models
+from django.db.models import Q
 
 from users.models import User
 
@@ -106,7 +107,9 @@ class ProjectTaskManager(models.Manager):
         try:
             _start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
             _end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-            if len(self.filter(project=project, name=name)) > 0:
+            var = self.filter(project=project,name=name)
+            print(var.count())
+            if self.filter(project=project,name=name).count() > 0:
                 return
             if _start_date > _end_date:
                 return
@@ -123,9 +126,13 @@ class ProjectTaskManager(models.Manager):
             print(str(e))
             return []
 
-    def remove_task_from_project(self):
-        pass
-
+    def remove_tasks_from_project(self,tasks):
+        try:
+            searched = self.filter(name__in=tasks)
+            return searched.delete()
+        except django.db.DatabaseError as e:
+            print(str(e))
+            return []
 
 class ProjectTask(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -196,6 +203,13 @@ class ProjectRoleManager(models.Manager):
             print(str(e))
         except Exception as ex:
             print(str(ex))
+    def get_project_roles(self,project):
+        try:
+            res = self.filter(userprojectrole__project=project).distinct()
+            return res
+        except django.db.Error as e:
+            print(str(e))
+            return []
 
 
 class ProjectRole(models.Model):
@@ -350,7 +364,6 @@ class ProjectTaskParticipation(models.Model):
 
     class Meta:
         db_table = 'project_task_participations'
-        managed = False
 
 
 class ProjectRequiementSectionManager(models.Manager):

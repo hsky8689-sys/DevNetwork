@@ -10,7 +10,8 @@
         },
         user: {
             username: "{{ stats.user_username|escapejs }}",
-            role: "{{ stats.role|escapejs }}"
+            role: "{{ stats.role|escapejs }}",
+            permissions:"{{ stats.permissions|escapejs }}"
         }
     };
 </script>

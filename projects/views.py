@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 
 import users.views
 from projects.models import Project, UserProjectRole, ProjectDomain, ProjectSkillRequirement, ProjectRequirementSection, \
-    ProjectTask
+    ProjectTask, ProjectRole
 
 
 @login_required
@@ -244,3 +244,32 @@ def api_add_project_task(request,name):
         return ProjectTask.objects.add_task_to_project(project,title,description,start_date,end_date)
     except Exception as e:
         print(str(e))
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def api_remove_project_tasks(request,name):
+    try:
+        project = Project.objects.get(name=name)
+        role = UserProjectRole.objects.get_user_role_in_project(project, request.user)
+        if UserProjectRole.objects.get_role_permissions(role, project)['can_change_project_settings']:
+            data = json.loads(request.body)
+            requirements = data.get('removedTasks', [])
+            ProjectTask.objects.remove_tasks_from_project(requirements)
+            return JsonResponse({'status':'succes','message':200})
+        else:
+            return JsonResponse({'status': 'Unauthorized access', 'code': 403})
+    except Exception as e:
+        return JsonResponse({'status':'error','message':str(e),'code':405})
+@csrf_exempt
+@require_http_methods(["GET"])
+def api_get_project_roles(request,name):
+    try:
+        project = Project.objects.get(name=name)
+        role = UserProjectRole.objects.get_user_role_in_project(project, request.user)
+        if UserProjectRole.objects.get_role_permissions(role, project)['can_change_project_settings']:
+            project_roles = ProjectRole.objects.get_project_roles(project).values()
+            return JsonResponse({'status':'succes','code':200,'roles':list(project_roles)})
+        else:
+            return JsonResponse({'status': 'Unauthorized access', 'code': 403})
+    except Exception as e:
+        print(str(e))
+        return JsonResponse({'status':'error','code':''})

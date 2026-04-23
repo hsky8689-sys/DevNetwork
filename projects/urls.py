@@ -3,7 +3,7 @@ from django.urls import path
 from projects.views import open_project_page, open_project_members_page, open_project_settings, api_get_project_domains, \
     api_get_project_requirements, api_add_project_domains, api_delete_project_domains, api_add_project_requirements, \
     api_remove_project_requirements, api_add_project_sections, api_remove_project_sections, api_get_project_tasks, \
-    api_add_project_task
+    api_add_project_task, api_remove_project_tasks, api_get_project_roles
 
 app_name = 'projects'
 
@@ -22,7 +22,9 @@ urlpatterns = [
     path("settings/<str:name>/api-add-requirement-sections",api_add_project_sections,name="add-project-requirement-sections"),
     path("settings/<str:name>/api-remove-requirement-sections",api_remove_project_sections,name="remove-project-requirement-sections"),
     path("settings/<str:name>/api-get-project-tasks",api_get_project_tasks,name="get_project_tasks"),
-    path("settings/<str:name>/api-add-task",api_add_project_task,name="add-project-task")
+    path("settings/<str:name>/api-add-task",api_add_project_task,name="add-project-task"),
+    path("settings/<str:name>/api-remove-tasks",api_remove_project_tasks,name="remove-project-tasks"),
+    path("settings/<str:name>/api-get-roles",api_get_project_roles,name="remove-project-tasks")
 ]
 
 

@@ -1,13 +1,4 @@
 const permission_denied = 'You do not have the permission to access this section';
-async function loadRolesSection(){
-    try{
-        if(!djangoContext.permissions.can_modify_tasks){
-            alert(permission_denied);
-    }
-    }catch (err){
-        alert(err);
-    }
-}
 async function loadProjectStatsSection(){
     try{
         var area = document.getElementsByClassName('project-related-posts').item(0);
@@ -117,7 +108,7 @@ async function loadTaskAdministrationSection(){
                                     <h2>${task.description}</h2><br>
                                     <h2>${task.start_date}</h2><br>
                                     <h2>${task.end_date}</h2>
-                                    <button onclick="queueTaskForDeletion(${task.id})">Delete task</button>
+                                    <button onclick="queueTaskForDeletion('${task.name}')">Delete task</button>
                                     <br>`;
                 });
             }
@@ -134,12 +125,64 @@ async function loadTaskAdministrationSection(){
                                 <label for="end-date"></label><br>
                                 <input type="date" id="end-date"/><br>
                                 <button>Add task</button>
-                        </form>`;
+                        </form>
+                        <button onclick="removeTasks()">Remove tasks</button>`;
+            newHtml += `<div id="pending-tasks" style="display: grid;gap=10px;margin: 10px;">
+                             
+                        </div>`;
         }
         area.innerHTML = newHtml;
     }catch (error){
         alert(error);
     }
+}
+async function removeTasks(){
+    try{
+        const desiredUrl = `/projects/settings/${window.djangoContext.project.name}/api-remove-tasks`;
+        const removed = JSON.parse(localStorage.getItem('removedTasks') || '[]');
+        const response = await fetch(desiredUrl,
+            {
+                    method: 'DELETE',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body:JSON.stringify({ 'removedTasks': removed })
+                }
+                );
+        if(response.ok){
+            localStorage.removeItem('removedTasks');
+            await loadTaskAdministrationSection();
+        }
+        else{
+            const errorData = await response.json();
+            alert("Server error: " + (errorData.status || response.statusText));
+        }
+    }catch (error){
+        alert(error);
+    }
+}
+function queueTaskForDeletion(task){
+     let removed = JSON.parse(localStorage.getItem('removedTasks') || '[]');
+     if (!removed.includes(task)) {
+        removed.push(task);
+        localStorage.setItem('removedTasks', JSON.stringify(removed));
+    }
+    renderPendingTasks();
+}
+function renderPendingTasks(){
+    var container = document.getElementById("pending-tasks");
+    if(!container)return;
+    let removed = JSON.parse(localStorage.getItem('removedTasks') || '[]');
+    if (removed.length > 0) {
+        container.innerHTML = removed.map((req, index) => `
+            <div class="pending-tag" style="background: #e3f2fd; display: inline-block; padding: 5px; margin: 2px; border-radius:4px;">
+                <strong>${req[0]}:</strong> ${req[1]} 
+                <button onclick="removeTaskFromLocalStorage(${index})">x</button>
+            </div>
+        `).join('');
+}
 }
 async function addTask(){
     event.preventDefault();
@@ -164,7 +207,7 @@ async function addTask(){
         if (response.ok) {
             const result = await response.json();
             form.reset();
-            loadTaskAdministrationSection();
+            await loadTaskAdministrationSection();
         } else {
             alert("Eroare la server: " + response.status);
         }
@@ -203,6 +246,12 @@ function renderPendingRequirements(){
     }
 
     saveBtn.style.display = (addedQueue.length > 0 || removedQueue.length > 0) ? 'block' : 'none';
+}
+function removeTaskFromLocalStorage(index){
+    let draft = JSON.parse(localStorage.getItem('removedTasks') || '[]');
+    draft.splice(index, 1);
+    localStorage.setItem('removedTasks', JSON.stringify(draft));
+    renderPendingRequirements();
 }
 function renderPendingDomains() {
     const container = document.getElementById('pending-domains');
@@ -410,7 +459,7 @@ async function addDomainsToDb(){
             if (remRes.ok) localStorage.removeItem('removedDomains');
         }
         alert("Changes saved successfully!");
-        loadProjectStatsSection();
+        await loadProjectStatsSection();
     } catch (err) {
         console.error(err);
         alert("An error occurred while saving changes.");
@@ -422,4 +471,29 @@ function removeRequirementFromLocalStorage(index, rmfromadd) {
     draft.splice(index, 1);
     localStorage.setItem(listName, JSON.stringify(draft));
     renderPendingRequirements();
+}
+//project role
+async function loadRolesSection(){
+    await getProjectRoles();
+    var area = document.getElementsByClassName('project-related-posts').item(0);
+    area.innerHTML = ``;
+    var roles = ``;
+
+    area.innerHTML = roles;
+}
+async function getProjectRoles(){
+    try{
+        const desiredUrl = ``;
+        const response = await fetch(`/projects/settings/${window.djangoContext.project.name}/api-get-roles`,
+            {headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }});
+        if(response.ok){
+            const data = await response.json();
+            alert(data.roles);
+            localStorage.setItem('roles',JSON.stringify(data.roles));
+        }
+    }catch (error){
+        alert(error);
+    }
 }
