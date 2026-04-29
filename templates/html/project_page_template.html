@@ -2,11 +2,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>{{ stats.project_name }}</title>
+    <link rel="stylesheet" href="{% static 'css/project-page.css' %}">
+    <script src="{% static 'js/project-page.js' %}" defer></script>
+    <script src="{% static 'js/edit-profile.js' %}" defer></script>
+    <script src="{% static 'js/project-settings-page.js' %}" defer></script>
+    <script src="{% static 'js/project-files.js' %}"></script>
     <script>
     window.djangoContext = {
         project: {
             name: "{{ stats.project_name|escapejs }}",
-            id: "{{ stats.project_id }}"
+            id: "{{ stats.project_id }}",
+            owner_username : "{{ stats.owner_github_name }}",
+            repo_name : "{{ stats.repo_name }}"
         },
         user: {
             username: "{{ stats.user_username|escapejs }}",
@@ -14,13 +23,7 @@
             permissions:"{{ stats.permissions|escapejs }}"
         }
     };
-</script>
-    <meta charset="UTF-8">
-    <title>{{ stats.project_name }}</title>
-    <link rel="stylesheet" href="{% static 'css/project-page.css' %}">
-    <script src="{% static 'js/project-page.js' %}" defer></script>
-    <script src="{% static 'js/edit-profile.js' %}" defer></script>
-    <script src="{% static 'js/project-settings-page.js' %}" defer></script>
+    </script>
 </head>
 <body>
     <div class="main-buttons">

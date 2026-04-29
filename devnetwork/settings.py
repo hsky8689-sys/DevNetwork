@@ -117,6 +117,7 @@ DEFAULT_SECTIONS = {
     'Experience': config('EXPERIENCE_DEFAULT'),
     'Certifications': config('CERTIFICATIONS_DEFAULT'),
 }
+GITHUB_TOKEN = config('GITHUB_TOKEN')
 
 INSTALLED_APPS = [
     'daphne',

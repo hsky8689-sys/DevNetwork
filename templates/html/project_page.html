@@ -1,6 +1,5 @@
 {% extends 'html/project_page_template.html' %}
 {% load static %}
-
 {% block content %}
     <div class="background-photo"></div>
     <div class="main-content">
@@ -14,6 +13,12 @@
             <br>
             <h2>{{stats.description}}</h2>
             <hr>
+            <div id="project-structure">
+                <h1>Loading files...</h1>
+            </div>
+            <div id="code-viewer">
+                
+            </div>
         </div>
         <div class="project-task-overview">
             {% if stats.role != 'visitor' %}

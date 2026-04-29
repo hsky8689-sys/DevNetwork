@@ -50,11 +50,11 @@ class Project(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=False, null=False, default='New project')
     description = models.CharField(max_length=5000, blank=False, null=False, default='Project description')
+    root_link = models.CharField(max_length=1000,blank=False,null=False,default='root_github')
     objects = ProjectManager()
 
     class Meta:
         db_table = 'projects'
-        managed = False
 
 
 class ProjectDomainManager(models.Manager):
@@ -364,7 +364,7 @@ class ProjectTaskParticipation(models.Model):
 
     class Meta:
         db_table = 'project_task_participations'
-
+        managed = False
 
 class ProjectRequiementSectionManager(models.Manager):
     def add_requirement_sections(self, project, names):

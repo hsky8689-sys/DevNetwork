@@ -1,6 +1,7 @@
 import json
 
 import django.db
+import requests
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -9,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 import users.views
+from devnetwork import settings
 from projects.models import Project, UserProjectRole, ProjectDomain, ProjectSkillRequirement, ProjectRequirementSection, \
     ProjectTask, ProjectRole
 
@@ -31,12 +33,17 @@ def open_project_page(request,name):
     user_role = UserProjectRole.objects.get_user_role_in_project(project, request.user)
     visitor_permissions = UserProjectRole.objects.get_role_permissions(user_role,project)
     project_domains = ProjectDomain.objects.get_project_domains(project)
+    root_link = project.root_link.split('/')
+    owner_username,repo_name = root_link[3],root_link[4]
     context_data = {
         'role': user_role,
         'user_id': request.user.id,
         'user_username': request.user.username,
         'project_name': project.name,
         'project_id': project.id,
+        'owner_github_name':owner_username,
+        'repo_name':repo_name,
+        'repository_link' : project.root_link,
         'staff': staff,
         'roles': list(staff.keys()),
         'domains':list(project_domains),
@@ -273,3 +280,26 @@ def api_get_project_roles(request,name):
     except Exception as e:
         print(str(e))
         return JsonResponse({'status':'error','code':''})
+@login_required
+def api_fetch_project_structure(request,owner,repo,path=""):
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    headers = {
+        "Accept":"application/vnd.github.v3+json"
+    }
+    if hasattr(settings,'GITHUB_TOKEN') and settings.GITHUB_TOKEN:
+        headers["Authorization"] = f"token {settings.GITHUB_TOKEN}"
+    try:
+      response = requests.get(url,headers=headers)
+      if response.status_code != 200:
+        return JsonResponse({
+            'error':'Error from github',
+            'details':response.json()
+        },status = response.status_code)
+      else:
+        data = response.json()
+        if isinstance(data,dict) and 'content' in data:
+            if isinstance(data['content'],bytes):
+                data['content'] = data['content'].decode('utf-8',errors='ignore')
+        return JsonResponse(data,safe=False)
+    except Exception as e:
+        return JsonResponse({'error':'Internal Server error','details':str(e)},status=500)
